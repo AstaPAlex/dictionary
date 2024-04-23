@@ -7,6 +7,7 @@ import lombok.NonNull;
 public class Word implements Comparable<Word> {
     @NonNull
     private final String word;
+    @NonNull
     private String description;
 
     @Override
