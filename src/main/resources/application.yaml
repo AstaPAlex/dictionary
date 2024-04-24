@@ -1,0 +1,4 @@
+spring:
+  cache:
+    cache-names: getAll, getWord, getWordPage
+    caffeine.spec: expireAfterAccess=5s

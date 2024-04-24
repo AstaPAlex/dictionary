@@ -3,6 +3,8 @@ package org.javaacademy.dictionary.repository;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.javaacademy.dictionary.entity.Word;
+import org.javaacademy.dictionary.repository.exception.WordAlreadyExistException;
+import org.javaacademy.dictionary.repository.exception.WordNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

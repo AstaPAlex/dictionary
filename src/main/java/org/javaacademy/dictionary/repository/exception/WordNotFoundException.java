@@ -1,4 +1,4 @@
-package org.javaacademy.dictionary.repository;
+package org.javaacademy.dictionary.repository.exception;
 
 import lombok.experimental.StandardException;
 

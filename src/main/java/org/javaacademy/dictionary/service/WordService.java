@@ -6,22 +6,26 @@ import org.javaacademy.dictionary.dto.PageWordDto;
 import org.javaacademy.dictionary.dto.WordDtoRq;
 import org.javaacademy.dictionary.dto.WordDtoRs;
 import org.javaacademy.dictionary.entity.Word;
-import org.javaacademy.dictionary.repository.WordAlreadyExistException;
-import org.javaacademy.dictionary.repository.WordNotFoundException;
+import org.javaacademy.dictionary.repository.exception.WordAlreadyExistException;
+import org.javaacademy.dictionary.repository.exception.WordNotFoundException;
 import org.javaacademy.dictionary.repository.WordRepository;
+import org.javaacademy.dictionary.service.exception.WordEmptyException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
 @Service
 public class WordService {
-    private final WordRepository repository;
+    private final WordRepository wordRepository;
 
+    @CacheEvict(cacheNames = {"getAll", "getWord", "getWordPage"}, allEntries = true)
     public WordDtoRs create(WordDtoRq wordDtoRq) throws WordEmptyException, WordAlreadyExistException {
         Word wordEntity = convertToEntity(wordDtoRq);
-        repository.add(wordEntity);
+        wordRepository.add(wordEntity);
         return convertToDtoRs(wordEntity);
     }
 
@@ -39,40 +43,48 @@ public class WordService {
         return new WordDtoRs(word.getWord(), word.getDescription());
     }
 
+    @Cacheable(cacheNames = "getAll")
     @SneakyThrows
     public List<WordDtoRs> getWords() {
         Thread.sleep(3000);
-        return repository.getWords().values().stream()
+        return wordRepository.getWords().values().stream()
                 .map(this::convertToDtoRs)
                 .toList();
     }
 
     @SneakyThrows
+    @Cacheable(cacheNames = "getWord")
     public WordDtoRs getWord(String wordFind) throws WordNotFoundException {
         Thread.sleep(3000);
-        return repository.findWord(wordFind.toUpperCase())
+        return wordRepository.findWord(wordFind.toUpperCase())
                 .map(this::convertToDtoRs)
                 .orElseThrow(WordNotFoundException::new);
     }
 
+    @CacheEvict(cacheNames = {"getAll", "getWord", "getWordPage"}, allEntries = true)
     public void update(String word, WordDtoRq wordDtoRq) throws WordEmptyException,
             WordNotFoundException {
-        repository.update(word.toUpperCase(), convertToEntity(wordDtoRq));
+        wordRepository.update(word.toUpperCase(), convertToEntity(wordDtoRq));
     }
 
+    @CacheEvict(cacheNames = {"getAll", "getWord", "getWordPage"}, allEntries = true)
     public boolean deleteWord(String word) {
-        return repository.delete(word);
+        return wordRepository.delete(word);
     }
 
-    public PageWordDto<List<WordDtoRs>> getWordsPage(Integer startElement, Integer pageSize) {
-        List<WordDtoRs> wordsDtoRs = repository.getWords().values().stream()
+    @SneakyThrows
+    @Cacheable(cacheNames = "getWordPage")
+    @CachePut(cacheNames = "getWordPage", condition = "#refresh == true")
+    public PageWordDto<List<WordDtoRs>> getWordsPage(Integer startElement, Integer pageSize, boolean refresh) {
+        Thread.sleep(3000);
+        List<WordDtoRs> wordsDtoRs = wordRepository.getWords().values().stream()
                 .skip(startElement)
                 .limit(pageSize)
                 .map(this::convertToDtoRs)
                 .toList();
         return new PageWordDto<>(
                 wordsDtoRs.size(),
-                repository.getWords().size(),
+                wordRepository.getWords().size(),
                 startElement,
                 startElement + wordsDtoRs.size(),
                 wordsDtoRs);

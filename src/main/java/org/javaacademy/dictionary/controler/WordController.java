@@ -4,10 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.javaacademy.dictionary.dto.PageWordDto;
 import org.javaacademy.dictionary.dto.WordDtoRq;
 import org.javaacademy.dictionary.dto.WordDtoRs;
-import org.javaacademy.dictionary.repository.WordAlreadyExistException;
-import org.javaacademy.dictionary.repository.WordNotFoundException;
-import org.javaacademy.dictionary.service.WordEmptyException;
+import org.javaacademy.dictionary.repository.exception.WordAlreadyExistException;
+import org.javaacademy.dictionary.repository.exception.WordNotFoundException;
+import org.javaacademy.dictionary.service.exception.WordEmptyException;
 import org.javaacademy.dictionary.service.WordService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,12 +18,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/word")
 public class WordController {
-    private final WordService service;
+    private final WordService wordService;
 
     @PostMapping
     public ResponseEntity<?> createWord(@RequestBody WordDtoRq wordDtoRq) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(wordDtoRq));
+            return ResponseEntity.status(HttpStatus.CREATED).body(wordService.create(wordDtoRq));
         } catch (WordEmptyException | WordAlreadyExistException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка заполнения:\n" + e.getMessage());
         }
@@ -30,13 +31,13 @@ public class WordController {
 
     @GetMapping
     public List<WordDtoRs> getAllWords() {
-        return service.getWords();
+        return wordService.getWords();
     }
 
     @GetMapping("/{word}")
     public ResponseEntity<?> getWord(@PathVariable String word) {
         try {
-            return ResponseEntity.status(HttpStatus.FOUND).body(service.getWord(word));
+            return ResponseEntity.status(HttpStatus.FOUND).body(wordService.getWord(word));
         } catch (WordNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
@@ -45,7 +46,7 @@ public class WordController {
     @PutMapping("/{word}")
     public ResponseEntity<?> updateWord(@PathVariable String word, @RequestBody WordDtoRq wordDtoRq) {
         try {
-            service.update(word, wordDtoRq);
+            wordService.update(word, wordDtoRq);
             return ResponseEntity.status(HttpStatus.ACCEPTED).build();
         } catch (WordNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -56,15 +57,16 @@ public class WordController {
 
     @DeleteMapping("/{word}")
     public ResponseEntity<?> deleteWord(@PathVariable String word) {
-        return service.deleteWord(word)
+        return wordService.deleteWord(word)
                 ? ResponseEntity.status(HttpStatus.ACCEPTED).build()
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @GetMapping("/page")
     public PageWordDto<List<WordDtoRs>> getWords(@RequestParam Integer startElement,
-                                                 @RequestParam Integer pageSize) {
-        return service.getWordsPage(startElement, pageSize);
+                                                 @RequestParam Integer pageSize,
+                                                 @RequestParam(required = false) boolean refresh) {
+        return wordService.getWordsPage(startElement, pageSize, refresh);
     }
 
 }
