@@ -6,7 +6,6 @@ import org.javaacademy.dictionary.entity.Word;
 import org.javaacademy.dictionary.repository.exception.WordAlreadyExistException;
 import org.javaacademy.dictionary.repository.exception.WordNotFoundException;
 import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 import java.util.TreeMap;
 
@@ -27,13 +26,12 @@ public class WordRepository {
         return Optional.ofNullable(words.get(wordFind));
     }
 
-    public void update(String wordKey, Word word) throws WordNotFoundException {
+    public void update(String wordKey, String description) throws WordNotFoundException {
         if (!words.containsKey(wordKey)) {
             throw new WordNotFoundException();
         }
-        words.put(wordKey, word);
+        words.get(wordKey).setDescription(description);
     }
-
 
     public boolean delete(String word) {
         return words.remove(word) != null;

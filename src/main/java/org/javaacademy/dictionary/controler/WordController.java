@@ -1,14 +1,15 @@
 package org.javaacademy.dictionary.controler;
 
 import lombok.RequiredArgsConstructor;
+import org.javaacademy.dictionary.dto.DescriptionDtoRq;
 import org.javaacademy.dictionary.dto.PageWordDto;
 import org.javaacademy.dictionary.dto.WordDtoRq;
 import org.javaacademy.dictionary.dto.WordDtoRs;
 import org.javaacademy.dictionary.repository.exception.WordAlreadyExistException;
 import org.javaacademy.dictionary.repository.exception.WordNotFoundException;
+import org.javaacademy.dictionary.service.exception.NotComplyFillingRulesException;
 import org.javaacademy.dictionary.service.exception.WordEmptyException;
 import org.javaacademy.dictionary.service.WordService;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class WordController {
     public ResponseEntity<?> createWord(@RequestBody WordDtoRq wordDtoRq) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(wordService.create(wordDtoRq));
-        } catch (WordEmptyException | WordAlreadyExistException e) {
+        } catch (WordEmptyException | WordAlreadyExistException | NotComplyFillingRulesException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка заполнения:\n" + e.getMessage());
         }
     }
@@ -43,14 +44,14 @@ public class WordController {
         }
     }
 
-    @PutMapping("/{word}")
-    public ResponseEntity<?> updateWord(@PathVariable String word, @RequestBody WordDtoRq wordDtoRq) {
+    @PatchMapping("/{word}")
+    public ResponseEntity<?> updateWord(@PathVariable String word, @RequestBody DescriptionDtoRq descriptionDtoRq) {
         try {
-            wordService.update(word, wordDtoRq);
+            wordService.update(word, descriptionDtoRq);
             return ResponseEntity.status(HttpStatus.ACCEPTED).build();
         } catch (WordNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (WordEmptyException e) {
+        } catch (WordEmptyException | NotComplyFillingRulesException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка заполнения:\n" + e.getMessage());
         }
     }
