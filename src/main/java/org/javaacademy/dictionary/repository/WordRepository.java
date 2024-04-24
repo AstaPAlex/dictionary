@@ -11,7 +11,7 @@ import java.util.TreeMap;
 @Component
 @Getter
 public class WordRepository {
-    TreeMap<String, Word> words = new TreeMap<>();
+    private final TreeMap<String, Word> words = new TreeMap<>();
 
     public void add(Word word) {
         if (words.containsKey(word.getWord())) {
