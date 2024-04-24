@@ -20,8 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class WordService {
-    private static final String EMPTY_TEXT_EXCEPTION = "Не все поля заполнены!";
-    private static final String NOT_RULES_TEXT_EXCEPTION = "Слово на английском, описание на русском языке!";
     private final WordRepository wordRepository;
 
     @CacheEvict(cacheNames = {"getAll", "getWord", "getWordPage"}, allEntries = true)
@@ -32,20 +30,19 @@ public class WordService {
         return convertToDtoRs(wordEntity);
     }
 
-    private Word convertToEntity(WordDtoRq wordDtoRq) throws WordEmptyException {
+    private Word convertToEntity(WordDtoRq wordDtoRq) {
         return new Word(wordDtoRq.getWord().toUpperCase(), wordDtoRq.getDescription());
     }
 
-    private boolean checkOnRules(String word, String description) throws WordEmptyException,
-            NotComplyFillingRulesException {
+    private boolean checkOnRules(String word, String description) {
         if (word == null || description == null) {
-            throw new WordEmptyException(EMPTY_TEXT_EXCEPTION);
+            throw new WordEmptyException();
         }
         if (word.isEmpty() || description.isEmpty()) {
-            throw new WordEmptyException(EMPTY_TEXT_EXCEPTION);
+            throw new WordEmptyException();
         }
-        if (!word.matches("[A-Za-z]+") || !description.matches("[А-Яа-я]+")) {
-            throw new NotComplyFillingRulesException(NOT_RULES_TEXT_EXCEPTION);
+        if (!word.matches("^[a-zA-Z]+$") || !description.matches("^[?!,.а-яА-ЯёЁ0-9\\s]+$")) {
+            throw new NotComplyFillingRulesException();
         }
         return true;
     }
@@ -65,7 +62,7 @@ public class WordService {
 
     @SneakyThrows
     @Cacheable(cacheNames = "getWord")
-    public WordDtoRs getWord(String wordFind) throws WordNotFoundException {
+    public WordDtoRs getWord(String wordFind) {
         Thread.sleep(3000);
         return wordRepository.findWord(wordFind.toUpperCase())
                 .map(this::convertToDtoRs)
@@ -73,16 +70,16 @@ public class WordService {
     }
 
     @CacheEvict(cacheNames = {"getAll", "getWord", "getWordPage"}, allEntries = true)
-    public void update(String word, DescriptionDtoRq descriptionDtoRq) throws WordEmptyException,
-            WordNotFoundException {
+    public WordDtoRs update(String word, DescriptionDtoRq descriptionDtoRq) {
         String textUpdate = descriptionDtoRq.getDescription();
         checkOnRules(word, textUpdate);
-        wordRepository.update(word.toUpperCase(), textUpdate);
+        Word updateWord = wordRepository.update(word.toUpperCase(), textUpdate);
+        return convertToDtoRs(updateWord);
     }
 
     @CacheEvict(cacheNames = {"getAll", "getWord", "getWordPage"}, allEntries = true)
-    public boolean deleteWord(String word) {
-        return wordRepository.delete(word);
+    public void deleteWord(String word) {
+        wordRepository.delete(word);
     }
 
     @SneakyThrows

@@ -2,3 +2,10 @@ spring:
   cache:
     cache-names: getAll, getWord, getWordPage
     caffeine.spec: expireAfterAccess=5s
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: ON_PARAM
+    include-exception: false

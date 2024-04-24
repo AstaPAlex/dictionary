@@ -5,15 +5,10 @@ import org.javaacademy.dictionary.dto.DescriptionDtoRq;
 import org.javaacademy.dictionary.dto.PageWordDto;
 import org.javaacademy.dictionary.dto.WordDtoRq;
 import org.javaacademy.dictionary.dto.WordDtoRs;
-import org.javaacademy.dictionary.repository.exception.WordAlreadyExistException;
-import org.javaacademy.dictionary.repository.exception.WordNotFoundException;
-import org.javaacademy.dictionary.service.exception.NotComplyFillingRulesException;
-import org.javaacademy.dictionary.service.exception.WordEmptyException;
 import org.javaacademy.dictionary.service.WordService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,48 +16,37 @@ import java.util.List;
 public class WordController {
     private final WordService wordService;
 
+    @ResponseStatus(CREATED)
     @PostMapping
-    public ResponseEntity<?> createWord(@RequestBody WordDtoRq wordDtoRq) {
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(wordService.create(wordDtoRq));
-        } catch (WordEmptyException | WordAlreadyExistException | NotComplyFillingRulesException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка заполнения:\n" + e.getMessage());
-        }
+    public WordDtoRs createWord(@RequestBody WordDtoRq wordDtoRq) {
+        return wordService.create(wordDtoRq);
     }
 
+    @ResponseStatus(ACCEPTED)
     @GetMapping
     public List<WordDtoRs> getAllWords() {
         return wordService.getWords();
     }
 
+    @ResponseStatus(ACCEPTED)
     @GetMapping("/{word}")
-    public ResponseEntity<?> getWord(@PathVariable String word) {
-        try {
-            return ResponseEntity.status(HttpStatus.FOUND).body(wordService.getWord(word));
-        } catch (WordNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    public WordDtoRs getWord(@PathVariable String word) {
+        return wordService.getWord(word);
     }
 
+    @ResponseStatus(ACCEPTED)
     @PatchMapping("/{word}")
-    public ResponseEntity<?> updateWord(@PathVariable String word, @RequestBody DescriptionDtoRq descriptionDtoRq) {
-        try {
-            wordService.update(word, descriptionDtoRq);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).build();
-        } catch (WordNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (WordEmptyException | NotComplyFillingRulesException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка заполнения:\n" + e.getMessage());
-        }
+    public WordDtoRs updateWord(@PathVariable String word, @RequestBody DescriptionDtoRq descriptionDtoRq) {
+        return wordService.update(word, descriptionDtoRq);
     }
 
+    @ResponseStatus(ACCEPTED)
     @DeleteMapping("/{word}")
-    public ResponseEntity<?> deleteWord(@PathVariable String word) {
-        return wordService.deleteWord(word)
-                ? ResponseEntity.status(HttpStatus.ACCEPTED).build()
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    public void deleteWord(@PathVariable String word) {
+        wordService.deleteWord(word);
     }
 
+    @ResponseStatus(ACCEPTED)
     @GetMapping("/page")
     public PageWordDto<List<WordDtoRs>> getWords(@RequestParam Integer startElement,
                                                  @RequestParam Integer pageSize,
