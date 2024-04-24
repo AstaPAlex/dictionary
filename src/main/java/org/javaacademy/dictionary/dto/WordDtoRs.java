@@ -1,11 +1,9 @@
 package org.javaacademy.dictionary.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Value;
 
-@AllArgsConstructor
-@Data
+@Value
 public class WordDtoRs {
-    private String word;
-    private String description;
+    String word;
+    String description;
 }
