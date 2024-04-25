@@ -35,10 +35,8 @@ public class WordService {
     }
 
     private boolean checkOnRules(String word, String description) {
-        if (word == null || description == null) {
-            throw new WordEmptyException();
-        }
-        if (word.isEmpty() || description.isEmpty()) {
+        if (word == null || description == null
+                || word.isEmpty() || description.isEmpty()) {
             throw new WordEmptyException();
         }
         if (!word.matches("^[a-zA-Z]+$") || !description.matches("^[?!,.а-яА-ЯёЁ0-9\\s]+$")) {
